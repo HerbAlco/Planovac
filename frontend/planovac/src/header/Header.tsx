@@ -18,7 +18,7 @@ const Header: React.FC = () => {
             <h1 className="logo">Planování</h1>
             <nav className="nav">
                 <Link to="/" className="nav-link">Domů</Link>
-                <Link to={id ? `/schedule/${id}` : "/"} className="nav-link">Rozvrh</Link>
+                <Link to={`/schedule/${id}`} className="nav-link">Rozvrh</Link>
                 <Link to={id ? `/workplaceview/${id}` : "/"} className="nav-link">Správa</Link>
             </nav>
         </header>

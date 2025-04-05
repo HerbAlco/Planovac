@@ -132,6 +132,28 @@ const WorkerView: React.FC = () => {
         }
     };
 
+    const handleDeletePriorityClick = async (workerId: number, workplaceId: number) => {
+        try {
+            await axios.delete(`http://localhost:8080/api/workers/delete-priority/${workerId}`, {
+                data: { workplaceId },
+                headers: { "Content-Type": "application/json" }
+            });
+
+            setWorkers((prevWorkers) =>
+                prevWorkers.map((worker) =>
+                    worker.id === workerId
+                        ? { ...worker, priorities: worker.priorities.filter(p => p.workplaceId !== workplaceId) }
+                        : worker
+                )
+            );
+
+            showMessage("✅ Priorita úspěšně odstraněna.", false);
+        } catch (err) {
+            showMessage("❌ Chyba při odstranění priority.", true);
+        }
+    };
+
+
     const handlePriorityClick = (workerId: number) => {
         setSelectedWorkerId(workerId);
         setShowPriorityModal(true);
@@ -212,6 +234,12 @@ const WorkerView: React.FC = () => {
                                                             return (
                                                                 <li key={priority.workplaceId}>
                                                                     {workplace ? workplace.name : "Neznámé pracoviště"} - {priority.priority}
+                                                                    <button
+                                                                        onClick={() => handleDeletePriorityClick(worker.id, priority.workplaceId)}
+                                                                        style={{ marginLeft: "10px", color: "red" }}
+                                                                    >
+                                                                        ❌
+                                                                    </button>
                                                                 </li>
                                                             );
                                                         })}
@@ -220,6 +248,7 @@ const WorkerView: React.FC = () => {
                                                     "Žádné priority"
                                                 )}
                                             </td>
+
                                             <td className="actions">
                                                 <button onClick={() => handleEditWorker(worker.id)} className="edit-button">
                                                     Upravit
