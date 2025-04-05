@@ -1,6 +1,6 @@
 package com.planovacsmeny.demo.controller;
 
-import com.planovacsmeny.demo.service.AssignmentService;
+import com.planovacsmeny.demo.service.ScheduleService;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -8,10 +8,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class PlanovacController {
 
-	private final AssignmentService assignmentService;
+	private final ScheduleService scheduleService;
 
-	public PlanovacController(AssignmentService assignmentService) {
-		this.assignmentService = assignmentService;
+	public PlanovacController(ScheduleService scheduleService) {
+		this.scheduleService = scheduleService;
 	}
 
 //	@GetMapping("/workplaces")

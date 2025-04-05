@@ -1,10 +1,13 @@
 package com.planovacsmeny.demo.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Entity
 @Table(name = "_workplace")
@@ -23,6 +26,10 @@ public class Workplace {
 	@JoinColumn(name = "work_operation_id")
 	@JsonBackReference
 	private WorkOperation workOperation;
+
+	@OneToMany(mappedBy = "workplace")
+	@JsonManagedReference
+	private List<ScheduleAssignment> scheduleAssignments;
 
 	@Override
 	public String toString() {

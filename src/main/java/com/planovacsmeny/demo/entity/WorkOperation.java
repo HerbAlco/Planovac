@@ -33,8 +33,8 @@ public class WorkOperation {
 		return "WorkOperation{" +
 			"id=" + id +
 			", name='" + name + '\'' +
-			", workersCount=" + (workers != null ? workers.size() : 0) + // Zobrazí počet pracovníků
-			", workplacesCount=" + (workplaces != null ? workplaces.size() : 0) + // Zobrazí počet pracovišť
+			", workersCount=" + (workers != null ? workers.size() : 0) +
+			", workplacesCount=" + (workplaces != null ? workplaces.size() : 0) +
 			'}';
 	}
 

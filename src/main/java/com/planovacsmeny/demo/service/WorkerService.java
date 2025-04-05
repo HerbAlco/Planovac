@@ -3,6 +3,8 @@ package com.planovacsmeny.demo.service;
 import com.planovacsmeny.demo.dto.WorkerDTO;
 import com.planovacsmeny.demo.entity.WorkOperation;
 import com.planovacsmeny.demo.entity.Worker;
+import com.planovacsmeny.demo.entity.repository.ScheduleAssignmentRepository;
+import com.planovacsmeny.demo.entity.repository.ScheduleRepository;
 import com.planovacsmeny.demo.entity.repository.WorkOperationRepository;
 import com.planovacsmeny.demo.entity.repository.WorkerRepository;
 import com.planovacsmeny.demo.mapper.WorkerMapper;
@@ -22,6 +24,10 @@ public class WorkerService
 	private WorkOperationRepository workOperationRepository;
 	@Autowired
 	private WorkerMapper workerMapper;
+	@Autowired
+	private ScheduleRepository scheduleRepository;
+	@Autowired
+	private ScheduleAssignmentRepository scheduleAssignmentRepository;
 
 	public WorkerDTO createWorker(WorkerDTO workerDTO, Integer workOperationId){
 		WorkOperation workOperation = workOperationRepository.findById(workOperationId).orElseThrow();
@@ -69,8 +75,22 @@ public class WorkerService
 		Worker worker = workerRepository.findById(workerId)
 			.orElseThrow(() -> new RuntimeException("Worker not found"));
 		worker.getPriorities().add(priority);
-		workerRepository.save(worker);
 
 		return workerMapper.toDTO(workerRepository.save(worker));
+	}
+
+	public List<Worker> getWorkers(Integer id)
+	{
+		List<Worker> workers = workerRepository.findAll();
+		return workers.stream().filter(worker -> worker.getWorkOperation().getId().equals(id)).toList();
+	}
+
+	public WorkerDTO deletePriority(Integer workerId, Worker.Priority priorityId)
+	{
+		Integer priorities = priorityId.getWorkplaceId();
+		Worker worker = workerRepository.findById(workerId).orElseThrow();
+		worker.getPriorities().removeIf(priority -> priority.getWorkplaceId().equals(priorities));
+		return workerMapper.toDTO(workerRepository.save(worker));
+
 	}
 }

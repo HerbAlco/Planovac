@@ -6,6 +6,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "_worker")
@@ -18,7 +19,16 @@ public class Worker {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 	private String name;
-	private Boolean available;
+	@Setter
+	private Boolean isAvailable;
+
+	@ManyToOne
+	@JoinColumn(name = "schedule_assignment_id")
+	@JsonBackReference
+	private ScheduleAssignment scheduleAssignment;
+
+	@OneToMany(mappedBy = "worker", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<WorkerAbsence> absences;
 
 	@ElementCollection
 	@CollectionTable(name = "worker_priorities",
@@ -29,6 +39,11 @@ public class Worker {
 	@JoinColumn(name = "work_operation_id")
 	@JsonBackReference
 	private WorkOperation workOperation;
+
+	public Boolean isAvailable()
+	{
+		return isAvailable;
+	}
 
 	@Data
 	@AllArgsConstructor
@@ -44,8 +59,8 @@ public class Worker {
 		return "Worker{" +
 			"id=" + id +
 			", name='" + name + '\'' +
-			", available=" + available +
-			", workOperation=" + (workOperation != null ? workOperation.getId() : "null") + // místo celého objektu vypíšeme ID
+			", available=" + isAvailable +
+			", workOperation=" + (workOperation != null ? workOperation.getId() : "null") +
 			'}';
 	}
 
