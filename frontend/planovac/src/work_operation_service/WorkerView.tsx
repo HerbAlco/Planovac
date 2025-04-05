@@ -28,10 +28,7 @@ const WorkerView: React.FC = () => {
     const [editingWorker, setEditingWorker] = useState<{ [key: number]: string }>({});
     const [newWorkerName, setNewWorkerName] = useState("");
     const [newAvailable, setNewAvailable] = useState(true);
-    const [showPriorityModal, setShowPriorityModal] = useState(false);
-    const [selectedWorkerId, setSelectedWorkerId] = useState<number | null>(null);
-    const [selectedWorkplaceId, setSelectedWorkplaceId] = useState<number | null>(null);
-    const [priority, setPriority] = useState(1);
+
 
     useEffect(() => {
         if (!workOperationId) return;
@@ -154,41 +151,12 @@ const WorkerView: React.FC = () => {
     };
 
 
-    const handlePriorityClick = (workerId: number) => {
-        setSelectedWorkerId(workerId);
-        setShowPriorityModal(true);
-    };
-
-    const handleModalSubmit = async () => {
-        if (selectedWorkerId !== null && selectedWorkplaceId !== null) {
-            try {
-                const response = await axios.post(
-                    `http://localhost:8080/api/workers/add-priority/${selectedWorkerId}`,
-                    {
-                        workplaceId: selectedWorkplaceId,
-                        priority: priority,
-                    }
-                );
-                const updatedWorker = response.data;
-                const updatedWorkers = workers.map((worker) =>
-                    worker.id === selectedWorkerId ? updatedWorker : worker
-                );
-                setWorkers(updatedWorkers);
-
-                showMessage("✅ Priorita úspěšně přidána.", false);
-            } catch (error) {
-                console.error("Chyba při ukládání priority:", error);
-                showMessage("❌ Chyba při ukládání priority.", true);
-            }
-        }
-
-        setShowPriorityModal(false);
-    };
 
 
-    const handleModalCancel = () => {
-        setShowPriorityModal(false);
-    };
+
+
+
+
 
     return (
         <div className="worker-container">
@@ -256,9 +224,6 @@ const WorkerView: React.FC = () => {
                                                 <button onClick={() => handleDeleteWorker(worker.id)} className="delete-button">
                                                     Smazat
                                                 </button>
-                                                <button onClick={() => handlePriorityClick(worker.id)} className="priority-button">
-                                                    Přidat prioritu
-                                                </button>
                                             </td>
                                         </tr>
                                     ))
@@ -298,42 +263,6 @@ const WorkerView: React.FC = () => {
                     </form>
                 </div>
             </div>
-
-            {showPriorityModal && selectedWorkerId !== null && (
-                <div className="priority-modal">
-                    <div className="modal-content">
-                        <h3>Přidat prioritu</h3>
-                        <div>
-                            <label>Pracoviště:</label>
-                            <select
-                                value={selectedWorkplaceId ?? ""}
-                                onChange={(e) => setSelectedWorkplaceId(Number(e.target.value))}
-                            >
-                                <option value="" disabled>Vyberte pracoviště</option>
-                                {workplaces.map((workplace) => (
-                                    <option key={workplace.id} value={workplace.id}>
-                                        {workplace.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label>Priorita:</label>
-                            <input
-                                type="number"
-                                value={priority}
-                                min={1}
-                                onChange={(e) => setPriority(Number(e.target.value))}
-                            />
-                        </div>
-                        <div>
-                            <button onClick={handleModalSubmit}>Uložit</button>
-                            <button onClick={handleModalCancel}>Zrušit</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
         </div>
     );
 };

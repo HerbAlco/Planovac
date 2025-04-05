@@ -11,17 +11,38 @@ interface Workplace {
     assignedWorkers: string[];
 }
 
+interface Worker {
+    id: number;
+    name: string;
+    available: boolean;
+    priorities: {
+        workplaceId: number;
+        priority: number;
+    }[];
+}
+
 const WorkplaceView: React.FC = () => {
     const { workOperationId } = useParams<{ workOperationId: string }>();
     const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+    const [workers, setWorkers] = useState<Worker[]>([]);
     const [editingWorkplace, setEditingWorkplace] = useState<Record<number, Partial<Workplace>>>({});
     const [newWorkplace, setNewWorkplace] = useState({ name: "", maxWorkers: 1 });
+    const [showPriorityModal, setShowPriorityModal] = useState(false);
+    const [selectedWorkerId, setSelectedWorkerId] = useState<number | null>(null);
+    const [selectedWorkplaceId, setSelectedWorkplaceId] = useState<number | null>(null);
+    const [priority, setPriority] = useState(1);
 
     const fetchWorkplaces = useCallback(async () => {
         if (!workOperationId) return;
         try {
-            const response = await axios.get<Workplace[]>(`http://localhost:8080/api/workplaces/getall/${workOperationId}`);
-            setWorkplaces(response.data.sort((a, b) => a.id - b.id));
+            const responseForWorkplaces = await axios.get<Workplace[]>(`http://localhost:8080/api/workplaces/getall/${workOperationId}`);
+            setWorkplaces(responseForWorkplaces.data.sort((a, b) => a.id - b.id));
+
+            const responseForWorkers = await axios.get<Worker[]>(
+                `http://localhost:8080/api/workOperation/workersfromworkoperation/${workOperationId}`
+            );
+            setWorkers(responseForWorkers.data.sort((a, b) => a.name.localeCompare(b.name)));
+            
         } catch {
             console.error("Error fetching workplaces.");
         }
@@ -46,7 +67,7 @@ const WorkplaceView: React.FC = () => {
             setNewWorkplace(prev => ({ ...prev, [name]: value }));
         }
     };
-    
+
     const showMessage = (message: string, isError: boolean) => {
         if (isError) {
             toast.error(message);  // Chybová notifikace
@@ -105,6 +126,41 @@ const WorkplaceView: React.FC = () => {
         }
     };
 
+    const handlePriorityClick = (workplaceId: number) => {
+        setSelectedWorkplaceId(workplaceId);
+        setShowPriorityModal(true);
+    };
+
+    const handleModalSubmit = async () => {
+        if (selectedWorkerId !== null && selectedWorkplaceId !== null) {
+            try {
+                const response = await axios.post(
+                    `http://localhost:8080/api/workers/add-priority/${selectedWorkerId}`,
+                    {
+                        workplaceId: selectedWorkplaceId,
+                        priority: priority,
+                    }
+                );
+                const updatedWorker = response.data;
+                const updatedWorkers = workers.map((worker) =>
+                    worker.id === selectedWorkerId ? updatedWorker : worker
+                );
+                setWorkers(updatedWorkers);
+
+                showMessage("✅ Priorita úspěšně přidána.", false);
+            } catch (error) {
+                console.error("Chyba při ukládání priority:", error);
+                showMessage("❌ Chyba při ukládání priority.", true);
+            }
+        }
+
+        setShowPriorityModal(false);
+    };
+
+    const handleModalCancel = () => {
+        setShowPriorityModal(false);
+    };
+
 
 
     return (
@@ -119,39 +175,54 @@ const WorkplaceView: React.FC = () => {
                     <table className="workplace-table">
                         <thead>
                             <tr>
-                                <th>Název</th>
-                                <th>Max. pracovníků</th>
-                                <th>Pracovníci</th>
-                                <th>Akce</th>
+                                <th className="name-column">Název</th>
+                                <th className="max-workers-column">Počet</th>
+                                <th className="assigned-workers-column">Pracovníci</th>
+                                <th className="actions-column">Akce</th>
                             </tr>
                         </thead>
                         <tbody>
                             {workplaces.length > 0 ? (
-                                workplaces.map(({ id, name, maxWorkers, assignedWorkers }) => (
-                                    <tr key={id}>
-                                        <td>
-                                            <input
-                                                type="text"
-                                                name="name"
-                                                value={editingWorkplace[id]?.name ?? name}
-                                                onChange={(e) => handleInputChange(e, id)}
-                                            />
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                name="maxWorkers"
-                                                value={editingWorkplace[id]?.maxWorkers ?? maxWorkers}
-                                                onChange={(e) => handleInputChange(e, id)}
-                                            />
-                                        </td>
-                                        <td>{(assignedWorkers || []).join(", ")}</td>
-                                        <td>
-                                            <button onClick={() => handleEditWorkplace(id)} className="edit-button">Upravit</button>
-                                            <button onClick={() => handleDeleteWorkplace(id)} className="delete-button">Smazat</button>
-                                        </td>
-                                    </tr>
-                                ))
+                                workplaces.map(({ id, name, maxWorkers }) => {
+                                    const assignedWorkers = workers
+                                        .map(worker => {
+                                            const priority = worker.priorities.find(p => p.workplaceId === id);
+                                            return priority ? { name: worker.name, priority: priority.priority } : null;
+                                        })
+                                        .filter((item): item is { name: string; priority: number } => item !== null)
+                                        .sort((a, b) => a.priority - b.priority)
+                                        .map(({ name, priority }) => `${name} (${priority})`)
+                                        .join(", ");
+                                    
+                                    return (
+                                        <tr key={id}>
+                                            <td>
+                                                <input
+                                                    type="text"
+                                                    name="name"
+                                                    value={editingWorkplace[id]?.name ?? name}
+                                                    onChange={(e) => handleInputChange(e, id)}
+                                                />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    name="maxWorkers"
+                                                    value={editingWorkplace[id]?.maxWorkers ?? maxWorkers}
+                                                    onChange={(e) => handleInputChange(e, id)}
+                                                />
+                                            </td>
+                                            <td>{assignedWorkers}</td>
+                                            <td className="actions-button">
+                                                <button onClick={() => handleEditWorkplace(id)} className="edit-button">Upravit</button>
+                                                <button onClick={() => handleDeleteWorkplace(id)} className="delete-button">Smazat</button>
+                                                <button onClick={() => handlePriorityClick(id)} className="priority-button">
+                                                    Přidat pracovníka
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             ) : (
                                 <tr>
                                     <td colSpan={4}>Žádná pracoviště nenalezena.</td>
@@ -160,7 +231,6 @@ const WorkplaceView: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
-
                 <div className="workplace-form-container">
                     <form onSubmit={handleAddWorkplace} className="workplace-form">
                         <h3>Přidat nové pracoviště</h3>
@@ -184,6 +254,41 @@ const WorkplaceView: React.FC = () => {
                     </form>
                 </div>
             </div>
+
+            {showPriorityModal && selectedWorkplaceId !== null && (
+                <div className="priority-modal">
+                    <div className="modal-content">
+                        <h3>Přidat pracovníka k {workplaces.find((workplace) => workplace.id === selectedWorkplaceId)?.name }</h3>
+                        <div>
+                            <label>Pracovník:</label>
+                            <select
+                                value={selectedWorkerId ?? ""}
+                                onChange={(e) => setSelectedWorkerId(Number(e.target.value))}
+                            >
+                                <option value="" disabled>Vyberte pracovníka</option>
+                                {workers.map((worker) => (
+                                    <option key={worker.id} value={worker.id}>
+                                        {worker.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label>Priorita:</label>
+                            <input
+                                type="number"
+                                value={priority}
+                                min={1}
+                                onChange={(e) => setPriority(Number(e.target.value))}
+                            />
+                        </div>
+                        <div>
+                            <button onClick={handleModalSubmit}>Uložit</button>
+                            <button onClick={handleModalCancel}>Zrušit</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
