@@ -1,6 +1,7 @@
 package com.planovacsmeny.demo.service;
 
 import com.planovacsmeny.demo.entity.AbsenceTypeEnum;
+import com.planovacsmeny.demo.entity.Worker;
 import com.planovacsmeny.demo.entity.WorkerAbsence;
 import com.planovacsmeny.demo.entity.repository.WorkerAbsenceRepository;
 import com.planovacsmeny.demo.entity.repository.WorkerRepository;
@@ -18,17 +19,17 @@ public class WorkerAbsenceService
 	@Autowired
 	private WorkerRepository workerRepository;
 
-	public Boolean isAbsenceToday (Integer workerId, LocalDate date){
+	public Boolean hasAbsenceOnDate(Integer workerId, LocalDate date)
+	{
 		List<WorkerAbsence> workerAbsences = workerAbsenceRepository.findByWorkerId(workerId);
-		for (WorkerAbsence workerAbsence: workerAbsences){
-			if(date.isAfter(workerAbsence.getStartDate()) && date.isBefore(workerAbsence.getEndDate())){
-				return true;
-			}
-		}
-		return false;
+		return workerAbsences.stream().anyMatch(
+			workerAbsence -> !date.isBefore(workerAbsence.getStartDate()) && !date.isAfter(workerAbsence.getEndDate()));
+
 	}
 
-	public WorkerAbsence createWorkerAbsence(Integer workerId, AbsenceTypeEnum absenceTypeEnum, LocalDate from, LocalDate to){
+	public WorkerAbsence createWorkerAbsence(Integer workerId, AbsenceTypeEnum absenceTypeEnum, LocalDate from,
+		LocalDate to)
+	{
 		WorkerAbsence newWorkerAbsence = new WorkerAbsence();
 		newWorkerAbsence.setWorker(workerRepository.findById(workerId).orElseThrow());
 		newWorkerAbsence.setAbsenceType(absenceTypeEnum);
@@ -37,4 +38,10 @@ public class WorkerAbsenceService
 
 		return workerAbsenceRepository.save(newWorkerAbsence);
 	}
+
+	public List<Worker> filterWorkersWithoutAbsence(List<Worker> workers, LocalDate date)
+	{
+		return workers.stream().filter(worker -> !hasAbsenceOnDate(worker.getId(), date)).toList();
+	}
+
 }

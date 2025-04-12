@@ -6,6 +6,7 @@ import com.planovacsmeny.demo.entity.WorkOperation;
 import com.planovacsmeny.demo.entity.Worker;
 import com.planovacsmeny.demo.entity.repository.ScheduleRepository;
 import com.planovacsmeny.demo.entity.repository.WorkOperationRepository;
+import com.planovacsmeny.demo.service.scheduleService.ScheduleServices;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,12 +26,16 @@ public class ScheduleService
 	private ScheduleRepository scheduleRepository;
 	@Autowired
 	private WorkerAbsenceService workerAbsenceService;
+	@Autowired
+	private ScheduleServices scheduleServices;
 
 
 	//TODO: vymyslet kdy se bude/budou vytvářet rozvrhy pro daný den/dny
 	//TODO: pokud nebude ani jeden list empty workOperation.workers && workOperation.workplaces + pri kazdé úprave pridanim odebranim worker/workplace
 	public Schedule createOrUpdateSchedule(Integer workOperationId, LocalDate date)
 	{
+
+		scheduleServices.createSchedule(workOperationId, date);
 
 		WorkOperation workOperation = workOperationRepository.findById(workOperationId)
 			.orElseThrow(() -> new IllegalArgumentException("WorkOperation not found"));
@@ -84,7 +89,7 @@ public class ScheduleService
 			//TODO: refactor -> on the end of the code are all worker.isAvailable set on false
 			worker.setIsAvailable(true);
 
-			worker.setIsAvailable(!workerAbsenceService.isAbsenceToday(worker.getId(), date));
+			worker.setIsAvailable(!workerAbsenceService.hasAbsenceOnDate(worker.getId(), date));
 
 			if (worker.getName().equals("Kubosch") || worker.getName().equals("Kukuczka") || worker.getName()
 				.equals("Walica"))
