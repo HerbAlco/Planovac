@@ -1,14 +1,18 @@
 package com.planovacsmeny.demo.service.scheduleService;
 
+import com.planovacsmeny.demo.entity.Schedule;
+import com.planovacsmeny.demo.entity.ScheduleAssignment;
 import com.planovacsmeny.demo.entity.Worker;
 import com.planovacsmeny.demo.entity.Workplace;
+import com.planovacsmeny.demo.entity.repository.ScheduleAssignmentRepository;
 import com.planovacsmeny.demo.entity.repository.ScheduleRepository;
 import com.planovacsmeny.demo.entity.repository.WorkOperationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
+@Service
 public class WorkerAssignment
 {
 
@@ -16,34 +20,37 @@ public class WorkerAssignment
 	private WorkOperationRepository workOperationRepository;
 	@Autowired
 	private ScheduleRepository scheduleRepository;
+	@Autowired
+	private ScheduleAssignmentRepository scheduleAssignmentRepository;
 
-	public static Map<Workplace, Worker> search(List<Worker> workers, List<Workplace> workplaces,
-		List<Priority> priorityList, Map<Workplace, Worker> assignedWorkplaces, Worker excludedWorker,
-		Workplace replacementWorkplace)
+	public Schedule search(List<Worker> workers, List<Workplace> workplaces, List<Priority> priorityList,
+		Schedule assignedSchedule, Worker excludedWorker, Workplace replacementWorkplace)
 	{
 
 
-
 		// Pokud jsou všechna pracovní místa obsazena, vypiš řešení
-		if (assignedWorkplaces.size() == workplaces.size())
+		if (assignedSchedule.getScheduleAssignments().size() == workplaces.size())
 		{
-
-			Map<Workplace, Worker> sortedMap = assignedWorkplaces.entrySet().stream()
-				.sorted(Comparator.comparing(entry -> entry.getKey().getId()))
-				.filter(e -> e.getValue() != null)
-
-				.collect(Collectors.toMap(
-					Map.Entry::getKey,
-					Map.Entry::getValue,
-					(oldValue, newValue) -> oldValue,
-					LinkedHashMap::new
-				));
-
-
-			sortedMap.forEach((workplace, worker) -> System.out.println(workplace.getName() + " -> " + worker.getName()));
+			assignedSchedule.getScheduleAssignments().forEach(sa -> {
+				System.err.print(sa.getWorkplace() + " -> ");
+				sa.getWorkers().forEach(w -> {
+					if (w == null)
+					{
+						System.err.print("Neobsazeno");
+					}
+					else
+					{
+						System.err.print(w.getName() + ", ");
+					}
+				});
+				System.err.println();
+			});
 
 			// Určení pracovníků, kteří nebyli přiřazeni
-			List<Worker> assignedWorkersList = new ArrayList<>(assignedWorkplaces.values());
+			List<Worker> assignedWorkersList = assignedSchedule.getScheduleAssignments().stream()
+				.filter(scheduleAssignment -> !scheduleAssignment.getWorkers().isEmpty())
+				.flatMap(scheduleAssignment -> scheduleAssignment.getWorkers().stream()).toList();
+
 			List<Worker> unassignedWorkers = workers.stream().filter(worker -> !assignedWorkersList.contains(worker))
 				.toList();
 
@@ -55,26 +62,28 @@ public class WorkerAssignment
 			{
 				unassignedWorkers.forEach(worker -> System.out.println("- " + worker));
 			}
-			return assignedWorkplaces;
+			return assignedSchedule;
 		}
 
 		// Najdi první neobsazené pracoviště
 		Workplace currentWorkplace = replacementWorkplace != null
 			? replacementWorkplace
-			: workplaces.stream().filter(w -> !assignedWorkplaces.containsKey(w)).findFirst().orElse(null);
+			: workplaces.stream().filter(
+					w -> assignedSchedule.getScheduleAssignments().stream().noneMatch(sa -> sa.getWorkplace().equals(w)))
+				.findFirst().orElse(null);
 
 		if (currentWorkplace == null)
 		{
 			System.out.println("Žádné dostupné pracoviště nebylo nalezeno.");
-			return assignedWorkplaces;
+			return assignedSchedule;
 		}
 
 
 		// Získání dostupných pracovníků seřazených podle priority
 		List<Worker> availableWorkers = priorityList.stream().filter(
-			p -> p.workplace.equals(currentWorkplace) && !assignedWorkplaces.containsValue(p.worker) && !p.worker.equals(
-				excludedWorker)).sorted(Comparator.comparingInt(p -> p.priority)).map(p -> p.worker).toList();
-
+				p -> p.workplace.equals(currentWorkplace) && assignedSchedule.getScheduleAssignments().stream()
+					.noneMatch(sa -> sa.getWorkers().equals(p.worker)) && !p.worker.equals(excludedWorker))
+			.sorted(Comparator.comparingInt(p -> p.priority)).map(p -> p.worker).toList();
 
 		// Pokud nejsou žádní dostupní pracovníci, vrať se
 		if (availableWorkers.isEmpty())
@@ -84,8 +93,9 @@ public class WorkerAssignment
 
 			for (Worker s : workersForCurrentWorkplace)
 			{
-				Optional<Workplace> workplace = assignedWorkplaces.entrySet().stream()
-					.filter(stringStringEntry -> stringStringEntry.getValue().equals(s)).map(Map.Entry::getKey).findFirst();
+
+				Optional<Workplace> workplace = assignedSchedule.getScheduleAssignments().stream()
+					.filter(sa -> sa.getWorkers().equals(s)).map(ScheduleAssignment::getWorkplace).findFirst();
 
 
 				if (workplace.isEmpty())
@@ -93,11 +103,14 @@ public class WorkerAssignment
 					continue;
 				}
 
-				if (workerAvailableForWorkplace(s, workplace.get(), assignedWorkplaces, priorityList) != null)
+				if (workerAvailableForWorkplace(s, workplace.get(), assignedSchedule, priorityList) != null)
 				{
-					assignedWorkplaces.remove(workplace.get());
-					search(workers, workplaces, priorityList, assignedWorkplaces, s, workplace.get());
-					return assignedWorkplaces;
+					ScheduleAssignment scheduleAssignment = assignedSchedule.getScheduleAssignments().stream()
+						.filter(sa -> sa.getWorkplace().equals(workplace.get())).findFirst().orElseThrow();
+
+					assignedSchedule.getScheduleAssignments().remove(scheduleAssignment);
+					search(workers, workplaces, priorityList, assignedSchedule, s, workplace.get());
+					return assignedSchedule;
 				}
 
 			}
@@ -109,23 +122,32 @@ public class WorkerAssignment
 		{
 			worker = null;
 
-		} else {
+		}
+		else
+		{
 			worker = availableWorkers.get(0);
 		}
 
-		assignedWorkplaces.put(currentWorkplace, worker);
-		search(workers, workplaces, priorityList, assignedWorkplaces, null, null);
+		ScheduleAssignment scheduleAssignment = new ScheduleAssignment();
+		scheduleAssignment.setSchedule(assignedSchedule);
+		scheduleAssignment.setWorkplace(currentWorkplace);
+		scheduleAssignment.getWorkers().add(worker);
+		scheduleAssignmentRepository.save(scheduleAssignment);
+		assignedSchedule.getScheduleAssignments().add(scheduleAssignment);
 
-		return assignedWorkplaces;
+		search(workers, workplaces, priorityList, assignedSchedule, null, null);
+
+		return assignedSchedule;
 	}
 
 
-	private static Worker workerAvailableForWorkplace(Worker worker, Workplace workplace,
-		Map<Workplace, Worker> assignedWorkplaces, List<Priority> priorityList)
+	private static Worker workerAvailableForWorkplace(Worker worker, Workplace workplace, Schedule assignedSchedule,
+		List<Priority> priorityList)
 	{
 
 		List<Worker> availableWorkers = priorityList.stream().filter(
-				p -> p.workplace.equals(workplace) && !assignedWorkplaces.containsValue(p.worker) && !p.worker.equals(worker))
+				p -> p.workplace.equals(workplace) && assignedSchedule.getScheduleAssignments().stream()
+					.noneMatch(sa -> sa.getWorkers().equals(p.worker)) && !p.worker.equals(worker))
 			.sorted(Comparator.comparingInt(p -> p.priority)).map(p -> p.worker).toList();
 
 		if (availableWorkers.isEmpty())

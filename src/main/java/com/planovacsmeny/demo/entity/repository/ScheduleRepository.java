@@ -11,5 +11,6 @@ import java.time.LocalDate;
 public interface ScheduleRepository extends JpaRepository<Schedule, Long>
 {
 	Schedule findByScheduleDateAndWorkOperation(LocalDate date, WorkOperation workOperation);
+
 	void deleteAllByWorkOperationId(Integer id);
 }
