@@ -97,7 +97,6 @@ public class WorkerAssignment
 				Optional<Workplace> workplace = assignedSchedule.getScheduleAssignments().stream()
 					.filter(sa -> sa.getWorkers().equals(s)).map(ScheduleAssignment::getWorkplace).findFirst();
 
-
 				if (workplace.isEmpty())
 				{
 					continue;
@@ -116,22 +115,21 @@ public class WorkerAssignment
 			}
 		}
 
-		Worker worker;
-		// Rekurzivně přiřazuj pracovníky k pracovištím
-		if (availableWorkers.isEmpty())
-		{
-			worker = null;
-
-		}
-		else
-		{
-			worker = availableWorkers.get(0);
-		}
-
 		ScheduleAssignment scheduleAssignment = new ScheduleAssignment();
+
+		// Rekurzivně přiřazuj pracovníky k pracovištím
+		if (!availableWorkers.isEmpty())
+		{
+
+			for (int i = 0; i < currentWorkplace.getMaxWorkers(); i++)
+			{
+				scheduleAssignment.getWorkers().add(availableWorkers.get(i));
+			}
+
+		}
+
 		scheduleAssignment.setSchedule(assignedSchedule);
 		scheduleAssignment.setWorkplace(currentWorkplace);
-		scheduleAssignment.getWorkers().add(worker);
 		scheduleAssignmentRepository.save(scheduleAssignment);
 		assignedSchedule.getScheduleAssignments().add(scheduleAssignment);
 
@@ -141,7 +139,7 @@ public class WorkerAssignment
 	}
 
 
-	private static Worker workerAvailableForWorkplace(Worker worker, Workplace workplace, Schedule assignedSchedule,
+	private Worker workerAvailableForWorkplace(Worker worker, Workplace workplace, Schedule assignedSchedule,
 		List<Priority> priorityList)
 	{
 

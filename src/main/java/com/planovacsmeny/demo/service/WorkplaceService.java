@@ -35,7 +35,7 @@ public class WorkplaceService
 		return workplaceRepository.findAllByWorkOperation_Id(workOperationId).stream().map(workplace -> workplaceMapper.toDTO(workplace)).toList();
 	}
 
-	public void update(WorkplaceDTO newWorkplaceDTO, Integer workOperationId)
+	public void update(WorkplaceDTO newWorkplaceDTO)
 	{
 		Workplace workplace = workplaceRepository.findById(newWorkplaceDTO.getId()).orElseThrow();
 		workplaceMapper.updateWorkplaceEntity(newWorkplaceDTO, workplace);

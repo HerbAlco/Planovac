@@ -80,6 +80,7 @@ public class ScheduleServices
 			scheduleOnDate.setWorkOperation(workOperation);
 			scheduleRepository.save(scheduleOnDate);
 		} else {
+			//TODO: vytváří rozdělení pokaždé, když se zavolá controller i když nedošlo ke změně (optimalizovat)
 			scheduleOnDate.getScheduleAssignments().clear();
 			scheduleRepository.save(scheduleOnDate);
 		}

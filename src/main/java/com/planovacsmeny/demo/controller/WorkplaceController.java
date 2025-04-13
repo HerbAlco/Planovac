@@ -32,9 +32,9 @@ public class WorkplaceController {
 		return ResponseEntity.ok(workplaceDTOS);
 	}
 
-	@PutMapping("/update/{workOperationId}")
-	public void updateWorkplace(@RequestBody WorkplaceDTO newWorkplaceDTO, @PathVariable Integer workOperationId){
-		workplaceService.update(newWorkplaceDTO, workOperationId);
+	@PutMapping("/update")
+	public void updateWorkplace(@RequestBody WorkplaceDTO newWorkplaceDTO){
+		workplaceService.update(newWorkplaceDTO);
 	}
 
 	@DeleteMapping("/delete/{id}")
