@@ -29,7 +29,6 @@ public class ScheduleAssignment
 
 	@ManyToOne
 	@JoinColumn(name = "workplace_id", nullable = false)
-	@JsonBackReference
 	private Workplace workplace;
 
 	@OneToMany(mappedBy = "scheduleAssignment", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -41,6 +41,7 @@ public class WorkerAbsenceService
 
 	public List<Worker> filterWorkersWithoutAbsence(List<Worker> workers, LocalDate date)
 	{
+		workers.removeIf(worker -> worker.getName().equals("Máj") || worker.getName().equals("Walica") ||  worker.getName().equals("Brel"));
 		return workers.stream().filter(worker -> !hasAbsenceOnDate(worker.getId(), date)).toList();
 	}
 

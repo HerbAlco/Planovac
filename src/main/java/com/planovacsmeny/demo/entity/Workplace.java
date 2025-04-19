@@ -27,10 +27,6 @@ public class Workplace {
 	@JsonBackReference
 	private WorkOperation workOperation;
 
-	@OneToMany(mappedBy = "workplace")
-	@JsonManagedReference
-	private List<ScheduleAssignment> scheduleAssignments;
-
 	@Override
 	public String toString() {
 		return "Workplace{" +

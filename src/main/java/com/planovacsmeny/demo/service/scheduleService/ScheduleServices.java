@@ -86,7 +86,7 @@ public class ScheduleServices
 		}
 
 
-		return workerAssignment.search(workers, workplaces, priorityList, scheduleOnDate, null, null);
+		return workerAssignment.search(workers, workplaces, priorityList, scheduleOnDate, new ArrayList<>(), null);
 
 
 	}

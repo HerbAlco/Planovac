@@ -1,10 +1,12 @@
 package com.planovacsmeny.demo.service;
 
+import com.planovacsmeny.demo.dto.WorkOperationCreateDTO;
 import com.planovacsmeny.demo.dto.WorkOperationDTO;
 import com.planovacsmeny.demo.dto.WorkerDTO;
 import com.planovacsmeny.demo.dto.WorkplaceDTO;
 import com.planovacsmeny.demo.entity.WorkOperation;
 import com.planovacsmeny.demo.entity.repository.WorkOperationRepository;
+import com.planovacsmeny.demo.mapper.WorkOperationCreateMapper;
 import com.planovacsmeny.demo.mapper.WorkOperationMapper;
 import com.planovacsmeny.demo.mapper.WorkerMapper;
 import com.planovacsmeny.demo.mapper.WorkplaceMapper;
@@ -19,6 +21,8 @@ public class WorkOperationService
 	@Autowired
 	private WorkOperationRepository workOperationRepository;
 	@Autowired
+	private WorkOperationCreateMapper workOperationCreateMapper;
+	@Autowired
 	private WorkOperationMapper workOperationMapper;
 	@Autowired
 	private WorkerMapper workerMapper;
@@ -26,8 +30,8 @@ public class WorkOperationService
 	private WorkplaceMapper workplaceMapper;
 
 
-	public WorkOperationDTO createWorkOperation(WorkOperationDTO workOperationDTO) {
-		return workOperationMapper.toDTO(workOperationRepository.save(workOperationMapper.toEntity(workOperationDTO)));
+	public WorkOperationDTO createWorkOperation(WorkOperationCreateDTO workOperationCreateDTO) {
+		return workOperationMapper.toDTO(workOperationRepository.save(workOperationCreateMapper.toEntity(workOperationCreateDTO)));
 	}
 
 	public List<WorkOperationDTO> findAll()
@@ -39,11 +43,6 @@ public class WorkOperationService
 	{
 		WorkOperation workOperation = workOperationRepository.findById(id).orElseThrow();
 		return workOperationMapper.toDTO(workOperation);
-	}
-
-	public void addWorkerToWorkOperation(WorkerDTO savedWorkerDTO, Integer id)
-	{
-
 	}
 
 	public List<WorkerDTO> getWorkers(Integer id)

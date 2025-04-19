@@ -1,5 +1,6 @@
 package com.planovacsmeny.demo.controller;
 
+import com.planovacsmeny.demo.dto.WorkOperationCreateDTO;
 import com.planovacsmeny.demo.dto.WorkOperationDTO;
 import com.planovacsmeny.demo.dto.WorkerDTO;
 import com.planovacsmeny.demo.dto.WorkplaceDTO;
@@ -19,8 +20,8 @@ public class WorkOperationController {
 	private WorkOperationService workOperationService;
 
 	@PostMapping("/create")
-	public ResponseEntity<WorkOperationDTO> createWorkOperation(@RequestBody WorkOperationDTO workOperationDTO) {
-		WorkOperationDTO createdWorkOperationDTO = workOperationService.createWorkOperation(workOperationDTO);
+	public ResponseEntity<WorkOperationDTO> createWorkOperation(@RequestBody WorkOperationCreateDTO workOperationCreateDTO) {
+		WorkOperationDTO createdWorkOperationDTO = workOperationService.createWorkOperation(workOperationCreateDTO);
 		return ResponseEntity.ok(createdWorkOperationDTO);
 	}
 
