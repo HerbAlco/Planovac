@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import "./Schedule.css";
+import "./Schedule.scss";
 import AbsenceLegend from "./AbsenceLegend";
 
 interface Workplace {
@@ -105,19 +105,27 @@ const Schedule: React.FC = () => {
                     </thead>
                     <tbody>
                         {Array.from({ length: maxRows }).map((_, index) => {
-                            const workplace = workplaces[index] ?? null;
+                            const sortedAssignments = [...(scheduleData?.scheduleAssignments ?? [])]
+                                .sort((a, b) => (a.workplace?.id ?? 0) - (b.workplace?.id ?? 0));
+
+                            
+                            const workplace = sortedAssignments[index]?.workplace ?? null;
                             const worker = workers[index] ?? null;
-                            const assignment = scheduleData?.scheduleAssignments?.[index] as ScheduleAssignment | undefined;
+                            const assignment = sortedAssignments?.[index] as ScheduleAssignment | undefined;
                             const assignedWorkers = assignment?.workers ?? [];
 
                             return (
                                 <tr key={index}>
                                     <td>{workplace?.name ?? ""}</td>
                                     <td>
-                                        {assignedWorkers.length > 0
-                                            ? assignedWorkers.map((w) => w.name).join(", ")
+                                        {assignedWorkers && assignedWorkers.length > 0
+                                            ? assignedWorkers
+                                                .filter((w) => w != null) 
+                                                .map((w) => w?.name)
+                                                .join(", ")
                                             : ""}
                                     </td>
+
                                     <td>{workplace?.helper ?? ""}</td>
                                     <td>{worker?.name ?? ""}</td>
                                     <td>
@@ -139,7 +147,7 @@ const Schedule: React.FC = () => {
                         })}
                     </tbody>
                 </table>
-                {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+                {errorMessage && <p className="error-message">{errorMessage}</p>}
             </div>
             <AbsenceLegend />
         </div>

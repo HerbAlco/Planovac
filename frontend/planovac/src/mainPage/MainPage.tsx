@@ -71,36 +71,37 @@ const MainPage = () => {
     return (
         <div className='mainpage-container'>
             <h1>Seznam provozů</h1>
-
-            <div>
-                <h2>Vytvořené provozy</h2>
-                {workOperations && workOperations.length > 0 ? (
-                    <ul>
-                        {workOperations.map((workOperation) => (
-                            <li key={workOperation.id}>
-                                <Link to={`/schedule/${workOperation.id}`}>
-                                    {workOperation.name}
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p>No WorkOperations available.</p>
-                )}
-            </div>
-            <div className='create-container'>
-                <form onSubmit={handleSubmit}>
-                    <label htmlFor="name">Název pro nové pracoviště:</label>
-                    <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                    />
-                    <button type="submit">Create</button>
-                </form>
+            <div className='list-container'>
+                <div>
+                    <h2>Vytvořené provozy</h2>
+                    {workOperations && workOperations.length > 0 ? (
+                        <ul>
+                            {workOperations.map((workOperation) => (
+                                <li key={workOperation.id}>
+                                    <Link to={`/schedule/${workOperation.id}`}>
+                                        {workOperation.name}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p>No WorkOperations available.</p>
+                    )}
+                </div>
+                <div className='create-container'>
+                    <form onSubmit={handleSubmit}>
+                        <label htmlFor="name">Název pro nové pracoviště:</label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                        />
+                        <button type="submit">Create</button>
+                    </form>
+                </div>
             </div>
             {responseMessage && <p style={{ color: 'green' }}>{responseMessage}</p>}
             {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { Link, useParams } from "react-router-dom";
-import "./WorkplaceView.css";
+import "./WorkplaceView.scss";
 import { toast, ToastContainer } from "react-toastify";
 
 interface Workplace {
@@ -100,7 +100,7 @@ const WorkplaceView: React.FC = () => {
         const workplaceUpdate = { ...updatedData, id: workplaceId };
 
         try {
-            await axios.put(`http://localhost:8080/api/workplaces/update/${workOperationId}`, workplaceUpdate);
+            await axios.put(`http://localhost:8080/api/workplaces/update`, workplaceUpdate);
             setWorkplaces(prev =>
                 prev.map(wp => (wp.id === workplaceId ? { ...wp, ...workplaceUpdate } : wp))
             );
@@ -116,7 +116,6 @@ const WorkplaceView: React.FC = () => {
     };
 
     const handleDeleteWorkplace = async (workplaceId: number) => {
-
         try {
             await axios.delete(`http://localhost:8080/api/workplaces/delete/${workplaceId}`);
             setWorkplaces(prev => prev.filter(wp => wp.id !== workplaceId));

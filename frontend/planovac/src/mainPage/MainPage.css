@@ -96,3 +96,8 @@ p[style="color: red"] {
     font-family: Arial, sans-serif;
 }
 
+.list-container {
+    display: flex;
+    margin-bottom: 20px;
+    
+}

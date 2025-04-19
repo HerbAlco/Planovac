@@ -151,13 +151,6 @@ const WorkerView: React.FC = () => {
     };
 
 
-
-
-
-
-
-
-
     return (
         <div className="worker-container">
             <nav className="worker-nav">
